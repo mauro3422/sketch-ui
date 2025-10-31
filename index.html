@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sketch UI – General (Live ASCII)</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="toolbar">
+    <div class="tool-group">
+      <button data-tool="select">Select</button>
+      <button data-tool="rect" class="active">Rect</button>
+      <button data-tool="pencil">Pencil</button>
+      <button data-tool="text">Text</button>
+    </div>
+    <div class="tool-group">
+      <label>Cols <input id="cols" type="number" min="2" max="48" value="12"></label>
+      <label>Rows <input id="rows" type="number" min="2" max="48" value="12"></label>
+      <label class="chk"><input id="snap" type="checkbox" checked> Snap</label>
+      <label>Texto <input id="textInput" type="text" placeholder="Etiqueta / hint…"/></label>
+      <label class="chk"><input id="liveAscii" type="checkbox" checked> Live ASCII</label>
+    </div>
+    <div class="tool-group">
+      <button id="exportJson">Export JSON</button>
+      <button id="exportAscii">Export ASCII (gen)</button>
+      <button id="exportTkGrid">Export Tk (grid)</button>
+      <button id="exportTkPlace">Export Tk (place)</button>
+      <button id="exportTkHybrid">Export Tk (hybrid)</button>
+      <button id="clear">Clear</button>
+    </div>
+  </header>
+
+  <main class="stage">
+    <div class="canvas-wrap">
+      <canvas id="canvas" width="1024" height="640"></canvas>
+      <canvas id="overlay" width="1024" height="640"></canvas>
+    </div>
+    <aside class="panels">
+      <section>
+        <h3>Salida JSON</h3>
+        <textarea id="jsonOut"></textarea>
+      </section>
+      <section>
+        <h3>Salida ASCII <small id="liveBadge">(live)</small></h3>
+        <textarea id="asciiOut"></textarea>
+      </section>
+      <section>
+        <h3>Notas</h3>
+        <ul>
+          <li>Doble‑clic en un rect para <b>renombrarlo</b> (se usa como <i>hint</i>).</li>
+          <li>La exportación <b>Hybrid</b> detecta contención geométrica y elige <i>paned</i> vertical/horizontal o deja el nodo como contenedor simple.</li>
+          <li>Activá/Desactivá <b>Live ASCII</b> para ver el wireframe al instante.</li>
+        </ul>
+      </section>
+    </aside>
+  </main>
+
+  <footer class="foot">Dibujá libre: simple o complejo. El export usa geometría para decidir paned/grid/place o ASCII correcto.</footer>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
