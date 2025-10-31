@@ -1,41 +1,43 @@
-# 🧠 Sketch-UI
+# Sketch-UI
 
-Bocetá interfaces con rectángulos / lápiz / texto, obtené **ASCII en vivo** y exportá esquemas (JSON, Tk grid/place/hybrid).
+Bocetá interfaces con rectángulos, texto o trazos y obtené ASCII/JSON/Tk para que una IA lo consuma.
 
-## Novedad
-- **Imagen de fondo + Auto detectar (OpenCV.js)**: cargás una screenshot, detecta bloques y los convierte en rects editables.
-- **Live ASCII**: el panel ASCII se actualiza mientras dibujás.
+## Ejemplo de salida (ASCII de referencia)
 
-## Cómo usar
-1. Abrí `index.html` con un server estático (p. ej. `npx serve`).
-2. Herramientas: **Rect**, **Pencil**, **Text**. Doble‑clic para renombrar rects.
-3. **Fondo**: cargá imagen; **Opacidad**: ajustá; **Auto detectar**: propone rectángulos.
-4. Mirá **Salida ASCII** en vivo y/o **Export JSON / Tk** cuando quieras.
+    +--------------------------------------------------------------+
+    |                        SKETCH ASCII (7 bloques)              |
+    +--------------------------------------------------------------+
+    | 01 • ventana_principal [h:100% w:100%]                      |
+    | 02 • barra_superior     [h:10%  w:100%]                      |
+    | 03 • menu_lateral       [h:90%  w:25%]                       |
+    | 04 • area_contenido     [h:90%  w:75%]                       |
+    | 05 • boton_aceptar      [h:10%  w:15%]                       |
+    | 06 • boton_cancelar     [h:10%  w:15%]                       |
+    | 07 • pie_de_pagina      [h:10%  w:100%]                      |
+    +--------------------------------------------------------------+
 
-## Exportadores
-- **JSON**: lista de widgets con bboxes en grilla, componentes inferidos y layout sugerido.
-- **ASCII genérico**: resumen de bloques con % respecto a la grilla.
-- **Tk grid/place**: mapea contenedores a `grid()` o `place()` proporcional.
-- **Tk hybrid**: arma un árbol de `paned` (vertical/horizontal) según contención y orientación inferida.
+Nota: porcentajes respecto a la grilla (Rows/Cols).
 
-## Detección (OpenCV.js)
-- Canny → contornos → `boundingRect` → merge por IoU.
-- Parámetros tunables en código: `minSize`, `canny1/2`, `approxEps`, `iouThresh`.
-- Carga automática desde múltiples CDNs (ver `opencv-loader.js`).
+## Equivalente JSON (para IA/Tk)
 
-## Estructura
-- `index.html` – UI + panels
-- `styles.css` – estilos
-- `app.js` – interacción, drawing, export hooks, fondo, live ASCII
-- `image_detect.js` – visión por computadora (detección de rects)
-- `opencv-loader.js` – descarga OpenCV desde CDNs
-- `heuristics.js` – inferencia de contención/orientación/componentes
-- `exporter.js` – exportadores JSON/ASCII/Tk
+    {
+      "toolkit": "tkinter",
+      "layout": {
+        "mode": "grid",
+        "grid": { "rows": 12, "cols": 12 },
+        "widgets": [
+          { "id": "ventana_principal", "grid": { "row": 0,  "column": 0, "rowspan": 12, "columnspan": 12 } },
+          { "id": "barra_superior",    "grid": { "row": 0,  "column": 0, "rowspan": 1,  "columnspan": 12 } },
+          { "id": "menu_lateral",      "grid": { "row": 1,  "column": 0, "rowspan": 10, "columnspan": 3 } },
+          { "id": "area_contenido",    "grid": { "row": 1,  "column": 3, "rowspan": 10, "columnspan": 9 } },
+          { "id": "boton_aceptar",     "grid": { "row": 11, "column": 7, "rowspan": 1,  "columnspan": 2 } },
+          { "id": "boton_cancelar",    "grid": { "row": 11, "column": 9, "rowspan": 1,  "columnspan": 2 } },
+          { "id": "pie_de_pagina",     "grid": { "row": 11, "column": 0, "rowspan": 1,  "columnspan": 12 } }
+        ]
+      }
+    }
 
-## Roadmap
-- Panel de parámetros (Canny/IoU) desde UI.
-- OCR (Tesseract.js) para labels automáticos.
-- Undo/Redo, mover/redimensionar rects, selección múltiple.
-
-## Licencia
-MIT
+## Uso
+- Dibujá con Rect/Pencil/Text, renombrá con doble clic.
+- Podés cargar imagen de fondo y usar "Auto detectar" (OpenCV.js).
+- Exportá ASCII/JSON/Tk o copiá del panel.
