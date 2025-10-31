@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <div id="syncBanner" class="banner hidden">✅ Auto-synced con GitHub Pages <button id="dismissBanner">Ocultar</button></div>
   <header class="toolbar">
     <div class="tool-group">
       <button data-tool="select">Select</button>
@@ -20,6 +21,7 @@
       <label class="chk"><input id="snap" type="checkbox" checked> Snap</label>
       <label>Texto <input id="textInput" type="text" placeholder="Etiqueta / hint…"/></label>
       <label class="chk"><input id="liveAscii" type="checkbox" checked> Live ASCII</label>
+      <button id="forceReload" title="Recargar la página (cache-bust)">Recargar</button>
     </div>
     <div class="tool-group">
       <button id="exportJson">Export JSON</button>

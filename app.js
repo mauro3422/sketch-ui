@@ -61,6 +61,20 @@ canvas.addEventListener('mousemove', onMove);
 window.addEventListener('mouseup', onUp);
 canvas.addEventListener('dblclick', onDoubleClickRename);
 
+// Banner + reload (solo en GitHub Pages)
+window.addEventListener('load', ()=>{
+  const isPages = location.hostname.endsWith('github.io');
+  const banner = $('#syncBanner');
+  const btnDismiss = $('#dismissBanner');
+  const btnReload = $('#forceReload');
+  if (isPages && banner){
+    banner.classList.remove('hidden');
+    setTimeout(()=> banner.classList.add('hidden'), 4000);
+  }
+  btnDismiss?.addEventListener('click', ()=> banner.classList.add('hidden'));
+  btnReload?.addEventListener('click', ()=> location.reload());
+});
+
 function onDown(e){
   const p = getPos(e);
   if (state.tool === TOOL.RECT){
@@ -101,7 +115,6 @@ function onUp(e){
     addEl({ type:'rect', ...r, label: `box#${state.elements.filter(e=>e.type==='rect').length+1}` });
     state.start = null;
   } else if (state.tool === TOOL.PENCIL){
-    // Ensure last point added
     state.currentPath.push(p);
     addEl({ type:'path', points:[...state.currentPath] }); state.currentPath=[];
   }
