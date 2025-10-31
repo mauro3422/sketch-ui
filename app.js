@@ -1,5 +1,6 @@
 import { inferLayout, inferComponents, buildContainmentTree } from './heuristics.js';
 import { exportJSON, exportASCIIGeneric, exportTkGrid, exportTkPlace, exportTkHybrid } from './exporter.js';
+import { detectRectsWithOpenCV } from './image_detect.js';
 
 const TOOL = { SELECT:'select', RECT:'rect', PENCIL:'pencil', TEXT:'text' };
 const $ = (sel) => document.querySelector(sel);
@@ -7,6 +8,14 @@ const canvas = $('#canvas');
 const overlay = $('#overlay');
 const ctx = canvas.getContext('2d');
 const ov = overlay.getContext('2d');
+
+// Fondo: canvas debajo del lienzo para dibujar la imagen
+const bgCanvas = document.createElement('canvas');
+bgCanvas.className = 'bg-layer';
+bgCanvas.width = canvas.width;
+bgCanvas.height = canvas.height;
+document.querySelector('.canvas-wrap').prepend(bgCanvas);
+const bg = bgCanvas.getContext('2d');
 
 let state = {
   tool: TOOL.RECT,
@@ -18,6 +27,7 @@ let state = {
   rows: 12,
   snap: true,
   liveAscii: true,
+  bg: { image:null, opacity:0.35 },
 };
 
 // UI
@@ -56,6 +66,27 @@ $('#exportTkHybrid').addEventListener('click', ()=>{
 });
 $('#clear').addEventListener('click', ()=> { state.elements = []; draw(); $('#jsonOut').value=''; $('#asciiOut').value=''; });
 
+// Fondo: carga y opacidad
+$('#bgInput').addEventListener('change', (e)=>{
+  const file = e.target.files?.[0];
+  if (!file) return;
+  const img = new Image();
+  img.onload = ()=>{ state.bg.image = img; draw(); };
+  img.src = URL.createObjectURL(file);
+});
+$('#bgOpacity').addEventListener('input', (e)=>{ state.bg.opacity = parseFloat(e.target.value||'0.35'); draw(); });
+
+// Auto-detección con OpenCV
+$('#autoDetect').addEventListener('click', async ()=>{
+  try{
+    if (!state.bg.image) { alert('Cargá primero una imagen de fondo.'); return; }
+    const rects = await detectRectsWithOpenCV(bgCanvas, { minSize:40, canny1:50, canny2:150, approxEps:8, iouThresh:0.15 });
+    if (!rects.length){ alert('No se detectaron bloques. Ajustá opacidad/imagen/umbral.'); return; }
+    rects.forEach(r=> addEl({ type:'rect', ...r, label:`auto#${uid().slice(0,4)}` }));
+    draw(); if (state.liveAscii) scheduleAscii();
+  } catch(err){ console.error(err); alert('OpenCV no disponible o error en detección.'); }
+});
+
 canvas.addEventListener('mousedown', onDown);
 canvas.addEventListener('mousemove', onMove);
 window.addEventListener('mouseup', onUp);
@@ -67,10 +98,7 @@ window.addEventListener('load', ()=>{
   const banner = $('#syncBanner');
   const btnDismiss = $('#dismissBanner');
   const btnReload = $('#forceReload');
-  if (isPages && banner){
-    banner.classList.remove('hidden');
-    setTimeout(()=> banner.classList.add('hidden'), 4000);
-  }
+  if (isPages && banner){ banner.classList.remove('hidden'); setTimeout(()=> banner.classList.add('hidden'), 4000); }
   btnDismiss?.addEventListener('click', ()=> banner.classList.add('hidden'));
   btnReload?.addEventListener('click', ()=> location.reload());
 });
@@ -78,15 +106,11 @@ window.addEventListener('load', ()=>{
 function onDown(e){
   const p = getPos(e);
   if (state.tool === TOOL.RECT){
-    const {x,y} = snap(p);
-    state.start = {x,y}; state.drawing = true;
+    const {x,y} = snap(p); state.start = {x,y}; state.drawing = true;
   } else if (state.tool === TOOL.PENCIL){
-    const {x,y} = snap(p);
-    state.currentPath = [{x,y}]; state.drawing = true;
+    const {x,y} = snap(p); state.currentPath = [{x,y}]; state.drawing = true;
   } else if (state.tool === TOOL.TEXT){
-    let txt = $('#textInput').value.trim();
-    if (!txt) { txt = prompt('Texto a insertar:',''); }
-    if (!txt) return;
+    let txt = $('#textInput').value.trim(); if (!txt) { txt = prompt('Texto a insertar:',''); } if (!txt) return;
     const {x,y} = snap(p); addEl({ type:'text', x, y, text:txt }); $('#textInput').value='';
   }
   draw();
@@ -115,11 +139,9 @@ function onUp(e){
     addEl({ type:'rect', ...r, label: `box#${state.elements.filter(e=>e.type==='rect').length+1}` });
     state.start = null;
   } else if (state.tool === TOOL.PENCIL){
-    state.currentPath.push(p);
-    addEl({ type:'path', points:[...state.currentPath] }); state.currentPath=[];
+    state.currentPath.push(p); addEl({ type:'path', points:[...state.currentPath] }); state.currentPath=[];
   }
-  state.drawing = false; draw();
-  if (state.liveAscii) scheduleAscii();
+  state.drawing = false; draw(); if (state.liveAscii) scheduleAscii();
 }
 
 function onDoubleClickRename(e){
@@ -148,6 +170,20 @@ function toGridBBox(r){ const cw = canvas.width/state.cols; const rh = canvas.he
 function toGridPoint(t){ const cw = canvas.width/state.cols; const rh = canvas.height/state.rows; return { x:Math.floor(t.x/cw), y:Math.floor(t.y/rh) }; }
 
 function draw(){
+  // Fondo (imagen)
+  bg.clearRect(0,0,bgCanvas.width,bgCanvas.height);
+  if (state.bg.image){
+    bg.save(); bg.globalAlpha = state.bg.opacity;
+    const img = state.bg.image;
+    const scale = Math.min(bgCanvas.width/img.width, bgCanvas.height/img.height);
+    const iw = img.width * scale, ih = img.height * scale;
+    const ix = (bgCanvas.width - iw) / 2;
+    const iy = (bgCanvas.height - ih) / 2;
+    bg.drawImage(img, ix, iy, iw, ih);
+    bg.restore();
+  }
+
+  // Vectorial
   ctx.clearRect(0,0,canvas.width, canvas.height);
   state.elements.forEach(el=>{
     if (el.type==='rect'){
@@ -159,8 +195,8 @@ function draw(){
       ctx.fillStyle = '#111827'; ctx.font = '14px sans-serif'; ctx.fillText(el.text||'', el.x, el.y);
     }
   });
-  drawGrid();
-  if (state.liveAscii) scheduleAscii();
+
+  drawGrid(); if (state.liveAscii) scheduleAscii();
 }
 
 // GRID UI
@@ -178,18 +214,8 @@ function drawGrid(){
 
 // LIVE ASCII (throttled)
 let asciiQueued = false;
-function scheduleAscii(){
-  if (asciiQueued) return;
-  asciiQueued = true;
-  requestAnimationFrame(()=>{
-    asciiQueued = false;
-    updateLiveAscii();
-  });
-}
-function updateLiveAscii(){
-  if (!state.liveAscii) return;
-  const ascii = exportASCIIGeneric(state, toGridBBox);
-  $('#asciiOut').value = ascii;
-}
+function scheduleAscii(){ if (asciiQueued) return; asciiQueued = true; requestAnimationFrame(()=>{ asciiQueued = false; updateLiveAscii(); }); }
+function updateLiveAscii(){ if (!state.liveAscii) return; const ascii = exportASCIIGeneric(state, toGridBBox); $('#asciiOut').value = ascii; }
 
+// Kick-off inicial
 draw();

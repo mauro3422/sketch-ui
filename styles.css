@@ -9,8 +9,9 @@ body { margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI,
 .tool-group .chk { align-items:center; }
 .stage { display:grid; grid-template-columns: 1fr 360px; gap:16px; padding:16px; }
 .canvas-wrap { position:relative; background:white; border:1px solid var(--line); border-radius:16px; overflow:hidden; box-shadow:0 1px 6px rgba(0,0,0,.05); }
-#canvas, #overlay { display:block; }
+#canvas, #overlay { display:block; position:relative; z-index:10; }
 #overlay { position:absolute; inset:0; pointer-events:none; }
+.bg-layer { position:absolute; inset:0; z-index:0; pointer-events:none; }
 .panels { display:grid; gap:12px; }
 .panels section { background:white; border:1px solid var(--line); border-radius:16px; padding:10px; }
 .panels h3 { margin:6px 0 8px; font-size:14px; display:flex; align-items:center; gap:6px; }
