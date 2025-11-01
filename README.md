@@ -39,5 +39,5 @@ Nota: porcentajes respecto a la grilla (Rows/Cols).
 
 ## Uso
 - Dibujá con Rect/Pencil/Text, renombrá con doble clic.
-- Podés cargar imagen de fondo y usar "Auto detectar" (OpenCV.js).
+- Podés cargar imagen de fondo y usar \"Auto detectar\" (OpenCV.js).
 - Exportá ASCII/JSON/Tk o copiá del panel.
