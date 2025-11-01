@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Sketch UI – General (Live ASCII)</title>
+  <title>Sketch UI - General (Live ASCII)</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div id="syncBanner" class="banner hidden">✅ Auto-synced con GitHub Pages <button id="dismissBanner">Ocultar</button></div>
+  <div id="syncBanner" class="banner hidden">Sync listo. Auto-synced con GitHub Pages <button id="dismissBanner">Ocultar</button></div>
   <header class="toolbar">
     <div class="tool-group">
       <button data-tool="select">Select</button>
@@ -19,12 +19,16 @@
       <label>Cols <input id="cols" type="number" min="2" max="48" value="12"></label>
       <label>Rows <input id="rows" type="number" min="2" max="48" value="12"></label>
       <label class="chk"><input id="snap" type="checkbox" checked> Snap</label>
-      <label>Texto <input id="textInput" type="text" placeholder="Etiqueta / hint…"/></label>
+      <label>Texto <input id="textInput" type="text" placeholder="Etiqueta / hint..."/></label>
       <label class="chk"><input id="liveAscii" type="checkbox" checked> Live ASCII</label>
       <label>Fondo <input id="bgInput" type="file" accept="image/*"></label>
       <label>Opacidad <input id="bgOpacity" type="range" min="0" max="1" step="0.05" value="0.35"></label>
       <button id="autoDetect">Auto detectar</button>
-      <button id="forceReload" title="Recargar la página (cache-bust)">Recargar</button>
+      <button id="forceReload" title="Recargar la p&aacute;gina (cache-bust)">Recargar</button>
+    </div>
+    <div id="detectProgress" class="progress hidden">
+      <div class="spinner" aria-hidden="true"></div>
+      <span id="progressLabel">Analizando imagen...</span>
     </div>
     <div class="tool-group">
       <button id="exportJson">Export JSON</button>
@@ -53,19 +57,22 @@
       <section>
         <h3>Notas</h3>
         <ul>
-          <li>Doble‑clic en un rect para <b>renombrarlo</b> (se usa como <i>hint</i>).</li>
-          <li>La exportación <b>Hybrid</b> detecta contención geométrica y elige <i>paned</i> vertical/horizontal o deja el nodo como contenedor simple.</li>
-          <li>Activá/Desactivá <b>Live ASCII</b> para ver el wireframe al instante.</li>
-          <li>Nuevo: podés cargar una <b>imagen de fondo</b> y usar <b>Auto detectar</b> (OpenCV.js) para proponer rectángulos.</li>
+          <li>Doble clic en un rect para <b>renombrarlo</b> (se usa como <i>hint</i>).</li>
+          <li>La exportaci&oacute;n <b>Hybrid</b> detecta contenci&oacute;n geom&eacute;trica y elige <i>paned</i> vertical/horizontal o deja el nodo como contenedor simple.</li>
+          <li>Activ&aacute;/Desactiv&aacute; <b>Live ASCII</b> para ver el wireframe al instante.</li>
+          <li>Nuevo: pod&eacute;s cargar una <b>imagen de fondo</b> y usar <b>Auto detectar</b> (OpenCV.js) para proponer rect&aacute;ngulos.</li>
         </ul>
+      </section>
+      <section id="logPanel">
+        <h3>Logs</h3>
+        <div id="logBox"></div>
       </section>
     </aside>
   </main>
 
-  <footer class="foot">Dibujá libre: simple o complejo. El export usa geometría para decidir paned/grid/place o ASCII correcto.</footer>
+  <footer class="foot">Dibuj&aacute; libre: simple o complejo. El export usa geometr&iacute;a para decidir paned/grid/place o ASCII correcto.</footer>
 
-  <script src="opencv-loader.js"></script>
+  <!-- Carga autom&aacute;tica de OpenCV.js bajo demanda -->
   <script type="module" src="app.js"></script>
-  <script type="module" src="image_detect.js"></script>
 </body>
 </html>

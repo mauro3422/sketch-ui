@@ -1,0 +1,24 @@
+{
+  "name": "sketch-ui",
+  "version": "1.0.0",
+  "description": "- Documentar la estructura visual de interfaces dibujadas en el lienzo y las reglas para generar ASCII/JSON/Tk.\r - Garantizar que el equipo humano y las IAs utilicen el mismo formato ASCII para discutir y generar layouts de UI.\r - Permitir bocetar interfaces dibujando cuadrados, l&iacute;neas o texto en un lienzo y traducirlo autom&aacute;ticamente a representaciones ASCII estructuradas.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mauro3422/sketch-ui.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/mauro3422/sketch-ui/issues"
+  },
+  "homepage": "https://github.com/mauro3422/sketch-ui#readme",
+  "dependencies": {
+    "playwright": "^1.56.1"
+  }
+}
