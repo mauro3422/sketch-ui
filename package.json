@@ -4,7 +4,7 @@
   "description": "- Documentar la estructura visual de interfaces dibujadas en el lienzo y las reglas para generar ASCII/JSON/Tk.\r - Garantizar que el equipo humano y las IAs utilicen el mismo formato ASCII para discutir y generar layouts de UI.\r - Permitir bocetar interfaces dibujando cuadrados, l&iacute;neas o texto en un lienzo y traducirlo autom&aacute;ticamente a representaciones ASCII estructuradas.",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node tests/run-worker-test.mjs"
   },
   "repository": {
     "type": "git",

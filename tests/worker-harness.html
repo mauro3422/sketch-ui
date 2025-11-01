@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <title>Harness detect-worker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        background: #f5f5f5;
+        color: #222;
+        margin: 2rem;
+      }
+      canvas {
+        border: 1px solid #999;
+      }
+      pre {
+        background: #fff;
+        border: 1px solid #ccc;
+        padding: 1rem;
+        max-width: 640px;
+        overflow-x: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Prueba del worker de detección</h1>
+    <p>
+      Esta página dibuja un rectángulo en un lienzo y ejecuta
+      <code>detectRectsWithOpenCV</code> directamente, mostrando los resultados
+      en la consola y exponiéndolos en <code>window.testResult</code> para los
+      tests automatizados.
+    </p>
+    <canvas id="source" width="200" height="150"></canvas>
+    <pre id="output">Esperando resultado…</pre>
+    <script type="module">
+      import { detectRectsWithOpenCV, onDetectLog } from '../image_detect.js';
+
+      const canvas = document.getElementById('source');
+      const output = document.getElementById('output');
+      const ctx = canvas.getContext('2d');
+
+      window.testResult = {
+        status: 'pending',
+        ok: false,
+        rects: [],
+        logs: [],
+        error: null,
+      };
+
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#222222';
+      ctx.fillRect(32, 24, 112, 72);
+
+      onDetectLog((message) => {
+        window.testResult.logs.push(message);
+        console.debug('[worker-log]', message);
+      });
+
+      (async () => {
+        try {
+          const rects = await detectRectsWithOpenCV(canvas, {
+            minSize: 20,
+            canny1: 10,
+            canny2: 40,
+          });
+          window.testResult.status = 'done';
+          window.testResult.ok = true;
+          window.testResult.rects = rects;
+          output.textContent = JSON.stringify(rects, null, 2);
+        } catch (err) {
+          const message = err?.message || String(err);
+          window.testResult.status = 'error';
+          window.testResult.error = message;
+          output.textContent = `Error: ${message}`;
+          console.error('Fallo en detectRectsWithOpenCV', err);
+        }
+      })();
+    </script>
+  </body>
+</html>
