@@ -11,6 +11,8 @@ const ov = overlay.getContext('2d');
 const progressBox = $('#detectProgress');
 const progressLabel = $('#progressLabel');
 const logBox = $('#logBox');
+const selfTestStatus = $('#selfTestStatus');
+const selfTestPreview = $('#selfTestPreview');
 
 // Fondo: canvas debajo del lienzo para dibujar la imagen
 const bgCanvas = document.createElement('canvas');
@@ -35,6 +37,8 @@ let state = {
   dragContext: null,
   detecting:false,
 };
+
+let selfTestInFlight = false;
 
 const history = {
   undo: [],
@@ -224,6 +228,14 @@ $('#bgOpacity').addEventListener('input', (e)=>{ state.bg.opacity = parseFloat(e
 // Auto-deteccion con OpenCV
 $('#autoDetect').addEventListener('click', async ()=>{
   await runAutoDetect();
+});
+
+$('#selfTestWorker')?.addEventListener('click', ()=>{
+  runWorkerSelfTest().catch((err)=>{
+    console.error(err);
+    logMessage(`Error en auto-prueba: ${err?.message || err}`);
+    updateSelfTestStatus(`Error: ${err?.message || err}`, false);
+  });
 });
 
 canvas.addEventListener('mousedown', onDown);
@@ -594,6 +606,83 @@ async function runAutoDetect(skipNoBgAlert=false){
       btn.textContent = prevLabel;
     }
     state.detecting = false;
+  }
+}
+
+function updateSelfTestStatus(message, ok){
+  if (!selfTestStatus) return;
+  selfTestStatus.textContent = message;
+  selfTestStatus.classList.remove('ok', 'fail');
+  if (ok === true){
+    selfTestStatus.classList.add('ok');
+  } else if (ok === false){
+    selfTestStatus.classList.add('fail');
+  }
+}
+
+function buildSelfTestScene(){
+  const off = document.createElement('canvas');
+  off.width = 320;
+  off.height = 200;
+  const ctx = off.getContext('2d');
+  ctx.fillStyle = '#f8fafc';
+  ctx.fillRect(0, 0, off.width, off.height);
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(28, 28, 120, 80);
+  ctx.fillRect(188, 64, 96, 96);
+  ctx.fillStyle = '#1d4ed8';
+  ctx.fillRect(44, 120, 84, 36);
+  ctx.fillRect(206, 28, 64, 28);
+  const expected = [
+    { x: 28, y: 28, w: 120, h: 80 },
+    { x: 188, y: 64, w: 96, h: 96 },
+    { x: 44, y: 120, w: 84, h: 36 },
+    { x: 206, y: 28, w: 64, h: 28 },
+  ];
+  return { canvas: off, expected };
+}
+
+function rectAlmostEqual(a, b, tolerance = 14){
+  return Math.abs(a.x - b.x) <= tolerance &&
+    Math.abs(a.y - b.y) <= tolerance &&
+    Math.abs(a.w - b.w) <= tolerance &&
+    Math.abs(a.h - b.h) <= tolerance;
+}
+
+async function runWorkerSelfTest(){
+  if (state.detecting){
+    alert('Esperá a que termine la detección actual.');
+    return;
+  }
+  if (selfTestInFlight){
+    return;
+  }
+  selfTestInFlight = true;
+  const { canvas: offscreen, expected } = buildSelfTestScene();
+  updateSelfTestStatus('Ejecutando auto-prueba…');
+  if (selfTestPreview){
+    selfTestPreview.src = offscreen.toDataURL('image/png');
+  }
+  logMessage('Ejecutando auto-prueba del worker (escena sintética)...');
+  try {
+    const rects = await detectRectsWithOpenCV(offscreen, { minSize: 20, canny1: 40, canny2: 120, approxEps: 6, iouThresh: 0.25 });
+    logMessage(`[self-test] Rectángulos detectados: ${rects.length}.`);
+    const matches = expected.every((exp)=> rects.some((det)=> rectAlmostEqual(det, exp))) && rects.length === expected.length;
+    if (matches){
+      updateSelfTestStatus(`Prueba OK. Se detectaron ${rects.length} rectángulos como se esperaba.`, true);
+      logMessage('[self-test] Resultado esperado. El worker responde correctamente.');
+    } else {
+      updateSelfTestStatus(`Resultado inesperado: ${rects.length} rectángulos. Revisá los logs.`, false);
+      const missing = expected.filter((exp)=> !rects.some((det)=> rectAlmostEqual(det, exp)));
+      if (missing.length){
+        logMessage(`[self-test] Rectángulos no detectados: ${missing.length}.`);
+      }
+      if (rects.length > expected.length){
+        logMessage(`[self-test] Rectángulos extra detectados: ${rects.length - expected.length}.`);
+      }
+    }
+  } finally {
+    selfTestInFlight = false;
   }
 }
 

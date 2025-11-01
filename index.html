@@ -24,6 +24,7 @@
       <label>Fondo <input id="bgInput" type="file" accept="image/*"></label>
       <label>Opacidad <input id="bgOpacity" type="range" min="0" max="1" step="0.05" value="0.35"></label>
       <button id="autoDetect">Auto detectar</button>
+      <button id="selfTestWorker" title="Genera una escena sintética para validar el worker">Probar OpenCV</button>
       <button id="forceReload" title="Recargar la p&aacute;gina (cache-bust)">Recargar</button>
     </div>
     <div id="detectProgress" class="progress hidden">
@@ -66,6 +67,11 @@
       <section id="logPanel">
         <h3>Logs</h3>
         <div id="logBox"></div>
+      </section>
+      <section id="selfTestPanel">
+        <h3>Auto-prueba OpenCV</h3>
+        <p id="selfTestStatus">Aún no se ejecutó la prueba.</p>
+        <img id="selfTestPreview" alt="Escena de prueba usada para validar el worker" />
       </section>
     </aside>
   </main>

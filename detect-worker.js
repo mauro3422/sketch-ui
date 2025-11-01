@@ -1,3 +1,10 @@
+const OPENCV_SOURCES = [
+  'libs/opencv.js',
+  'https://cdn.jsdelivr.net/npm/opencv.js@4.10.0/opencv.js',
+  'https://unpkg.com/opencv.js@4.10.0/opencv.js',
+  'https://docs.opencv.org/4.x/opencv.js'
+];
+
 let cvReady = null;
 
 function postLog(message, id) {
@@ -12,23 +19,61 @@ function loadOpenCV() {
   if (cvReady) {
     return cvReady;
   }
+
   cvReady = new Promise((resolve, reject) => {
-    try {
-      postLog('Cargando OpenCV en worker...');
-      self.importScripts('libs/opencv.js');
+    let attempt = 0;
+    let currentAttempt = 0;
+    const TIMEOUT_MS = 30000;
+    const fail = (error) => {
+      cvReady = null;
+      reject(error);
+    };
+
+    const tryNext = () => {
+      if (attempt >= OPENCV_SOURCES.length) {
+        fail(new Error('No se pudo cargar OpenCV en el worker.'));
+        return;
+      }
+
+      const src = OPENCV_SOURCES[attempt++];
+      const attemptId = ++currentAttempt;
+      try {
+        delete self.cv;
+        delete self.Module;
+        postLog(`Cargando OpenCV en worker (${src}).`);
+        self.importScripts(src);
+      } catch (err) {
+        postLog(`Fallo al importar OpenCV desde ${src}: ${err?.message || err}`);
+        tryNext();
+        return;
+      }
+
+      const start = Date.now();
       const poll = () => {
+        if (attemptId !== currentAttempt) {
+          return;
+        }
+
         if (self.cv && self.cv.Mat) {
           postLog('OpenCV listo en worker.');
           resolve(self.cv);
-        } else {
-          setTimeout(poll, 50);
+          return;
         }
+
+        if (Date.now() - start >= TIMEOUT_MS) {
+          postLog(`Timeout cargando OpenCV desde ${src}. Probando siguiente fuente...`);
+          tryNext();
+          return;
+        }
+
+        setTimeout(poll, 50);
       };
       poll();
-    } catch (err) {
-      reject(err);
-    }
+    };
+
+    tryNext();
   });
+
   return cvReady;
 }
 
